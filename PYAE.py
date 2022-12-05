@@ -1,83 +1,69 @@
-from hashlib import md5
-from pefile import PE
-from tkinter import filedialog
+from pefile import PE, DIRECTORY_ENTRY
+import os
 
-def file_scan(file):
-    print('正在初始化，請稍後...')
-    with open('Library/Viruslist.md5','r') as fp:#初始化MD5資料庫
-        rfp = fp.read()
-    with open('Library/Viruslist.func','r') as fn:#初始化函式資料庫
-        rfn = fn.read()
-    print('PYAE 正在掃描中，請稍後...')
-    print('----------------------------------------')
-    if file != "":#空白資料檢測
-        if md5_scan(file,rfp):#執行MD5資料檢測
-            print('掃描結果: 惡意文件 (強烈建議立即刪除此檔案)')
-        else:#若MD5沒檢測到
-            try:#嘗試
-                fts = 0
-                pe = PE(file)#讀取PE
-                for entry in pe.DIRECTORY_ENTRY_IMPORT:
-                    for function in entry.imports:#讀取函式
-                        if str(function.name) in rfn:#如果有出現在料庫內
-                            fts = fts + 1#添加1
-                if fts != 0:#如果有出現
-                    fts = 0#重置
-                    print('掃描結果: 危險文件 (此檔案可能會修改部分系統功能)')
-                else:#如果都沒有
-                    print('掃描結果: 安全文件 (當前未找到含有惡意內容)')
-            except Exception as e:#如果非執行檔案
-                print('掃描結果: 安全文件 (當前未找到含有惡意內容)')
-        fp.close()#關閉MD5資料庫
-        fn.close()#關閉函式資料庫
-    else:
+def pyas_sign_start(file):
+    try:
+        pe = PE(file,fast_load=True)
+        if pe.OPTIONAL_HEADER.DATA_DIRECTORY[DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']].VirtualAddress == 0:
+            pe.close()
+            return True
+        else:
+            pe.close()
+            return False
+    except:
+        return False
+
+def path_scan_start(path,sfile,ufile):
+    try:
+        for fd in os.listdir(path):
+            try:
+                fullpath = str(os.path.join(path,fd))
+                if 'C:/Windows' not in path:
+                    if os.path.isdir(fullpath):
+                        path_scan_start(fullpath,sfile,ufile)
+                    else:
+                        afile.append(fullpath)
+                        root, extension = os.path.splitext(fd)
+                        if '.exe' in extension.lower():
+                            if pyas_sign_start(fullpath):
+                                ufile.append(fullpath)
+                                print('Unauthenticated file: '+fullpath)
+                            else:
+                                sfile.append(fullpath)
+            except:
+                continue
+    except:
         pass
 
-def md5_scan(file,rfp):#定義MD5資料檢測
-    try:#嘗試
-        virus_found = False
-        with open(file,"rb") as f:#與需要掃描的檔案做對比
-            bytes = f.read()
-            readable_hash = md5(bytes).hexdigest();
-            if str(readable_hash) in str(rfp):#如果有出現在料庫內
-                virus_found = True#將此檔案設為病毒
-                f.close()
-        if not virus_found:#如果不是病毒
-            return False#回傳False
-        else:#否則
-            return True#回傳True
-    except:#異常略過
-        pass
-
-def check_key():#定義自我安全檢查
-    print('正在進行自我安全檢查，請稍後...')
-    file = 'PYAE.py'#檢查的項目
-    if file != '':#空白資料檢測
-        with open(file,"rb") as f:#開起檢查的項目
-            bytes = f.read()#讀取Bytes
-            readable_hash = md5(bytes).hexdigest();#讀取 MD5 HASHES
-        f.close()#關閉檢查的項目
-        try:#嘗試
-            ft = open('Library/PYAE.key','r')#開啟對比文件
-            fe = ft.read()#讀取文件值
-            ft.close()#關閉對比文件
-            if fe == readable_hash:#如果與對比文件數據相同
-                print('安全檢查通過: 您可以放心使用 PYAE 掃毒引擎。')
-                print('----------------------------------------')
-                print('請選擇需要掃描的檔案。')
-                file = filedialog.askopenfilename()#TK選擇掃描檔案
-                if file != '':#空白資料檢測
-                    file_scan(file)#執行掃毒引擎
-                else:#否則略過
-                    print('未選擇任何檔案。')
-            else:#否則略過
-                print('安全檢查錯誤: 當前 PYAE 掃毒引擎不是正版，或被修改過，為了保證您的數據安全，請從官方提供的載點重新下載。')
-        except:#異常略過
-            print('安全檢查錯誤: 當前 PYAE 掃毒引擎安全密鑰缺失，為了保證您的數據安全，請從官方提供的載點重新下載。')
-    else:
-        pass
-
-print('掃毒引擎版本: PYAE V1.2.3')
-print('由 PYDT 安全開發團隊製作')
-print('----------------------------------------')
-check_key()#執行自我安全檢查
+afile = []
+sfile = []
+ufile = []
+input('Signature Detection Tool V1.0 (Press Enter to start)\n'+('='*60))
+path_scan_start('A:/',sfile,ufile)
+path_scan_start('B:/',sfile,ufile)
+path_scan_start('C:/',sfile,ufile)
+path_scan_start('D:/',sfile,ufile)
+path_scan_start('E:/',sfile,ufile)
+path_scan_start('F:/',sfile,ufile)
+path_scan_start('G:/',sfile,ufile)
+path_scan_start('H:/',sfile,ufile)
+path_scan_start('I:/',sfile,ufile)
+path_scan_start('J:/',sfile,ufile)
+path_scan_start('K:/',sfile,ufile)
+path_scan_start('L:/',sfile,ufile)
+path_scan_start('M:/',sfile,ufile)
+path_scan_start('N:/',sfile,ufile)
+path_scan_start('O:/',sfile,ufile)
+path_scan_start('P:/',sfile,ufile)
+path_scan_start('Q:/',sfile,ufile)
+path_scan_start('R:/',sfile,ufile)
+path_scan_start('S:/',sfile,ufile)
+path_scan_start('T:/',sfile,ufile)
+path_scan_start('U:/',sfile,ufile)
+path_scan_start('V:/',sfile,ufile)
+path_scan_start('W:/',sfile,ufile)
+path_scan_start('X:/',sfile,ufile)
+path_scan_start('Y:/',sfile,ufile)
+path_scan_start('Z:/',sfile,ufile)
+print(('='*60)+'\nScanned files: '+str(len(afile))+'\nDetected files: '+str(len(sfile)+len(ufile))+'\nCertified file: '+str(len(sfile))+'\nUncertified file: '+str(len(ufile)))
+input(('='*60)+'\nPowered by PYAS, press Enter to end the program')

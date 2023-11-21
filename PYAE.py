@@ -1,69 +1,56 @@
-from pefile import PE, DIRECTORY_ENTRY
-import os
+import pefile, os, gc
+from PYAS_Function import function_list
+from PYAS_Function_Safe import function_list_safe
 
-def pyas_sign_start(file):
+def pe_scan(file):
     try:
-        pe = PE(file,fast_load=True)
-        if pe.OPTIONAL_HEADER.DATA_DIRECTORY[DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_SECURITY']].VirtualAddress == 0:
-            pe.close()
-            return True
-        else:
-            pe.close()
-            return False
-    except:
-        return False
-
-def path_scan_start(path,sfile,ufile):
-    try:
-        for fd in os.listdir(path):
-            try:
-                fullpath = str(os.path.join(path,fd))
-                if 'C:/Windows' not in path:
-                    if os.path.isdir(fullpath):
-                        path_scan_start(fullpath,sfile,ufile)
-                    else:
-                        afile.append(fullpath)
-                        root, extension = os.path.splitext(fd)
-                        if '.exe' in extension.lower():
-                            if pyas_sign_start(fullpath):
-                                ufile.append(fullpath)
-                                print('Unauthenticated file: '+fullpath)
-                            else:
-                                sfile.append(fullpath)
-            except:
-                continue
+        fn = []
+        with pefile.PE(file) as pe:
+            if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
+                for entry in pe.DIRECTORY_ENTRY_IMPORT:
+                    for func in entry.imports:
+                        try:
+                            fn.append(str(func.name, "utf-8"))
+                        except:
+                            pass
+                max_vfl = []
+                for vfl in function_list:
+                    max_vfl.append(len(set(fn)&set(vfl))/len(set(fn)|set(vfl)))
+                max_sfl = []
+                for sfl in function_list_safe:
+                    max_sfl.append(len(set(fn)&set(sfl))/len(set(fn)|set(sfl)))
+                if max(max_vfl) == 1.0 and max(max_sfl) != 1.0:
+                    print(f'Engine: PYAS ML Engine\nDetect: Virus\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                elif max(max_vfl) - max(max_sfl) >= 0.1:
+                    print(f'Engine: PYAS ML Engine\nDetect: Suspicious\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                elif max(max_sfl) - max(max_vfl) >= 0.1:
+                    print(f'Engine: PYAS ML Engine\nDetect: Safe\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                else:
+                    print(f'Engine: PYAS ML Engine\nDetect: Warning\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+            else:
+                print(f'Engine: PYAS ML Engine\nDetect: Unknown\nLevels: 0.0/0.0\nFile: {file}\n{"="*50}')
     except:
         pass
 
-afile = []
-sfile = []
-ufile = []
-input('Signature Detection Tool V1.0 (Press Enter to start)\n'+('='*60))
-path_scan_start('A:/',sfile,ufile)
-path_scan_start('B:/',sfile,ufile)
-path_scan_start('C:/',sfile,ufile)
-path_scan_start('D:/',sfile,ufile)
-path_scan_start('E:/',sfile,ufile)
-path_scan_start('F:/',sfile,ufile)
-path_scan_start('G:/',sfile,ufile)
-path_scan_start('H:/',sfile,ufile)
-path_scan_start('I:/',sfile,ufile)
-path_scan_start('J:/',sfile,ufile)
-path_scan_start('K:/',sfile,ufile)
-path_scan_start('L:/',sfile,ufile)
-path_scan_start('M:/',sfile,ufile)
-path_scan_start('N:/',sfile,ufile)
-path_scan_start('O:/',sfile,ufile)
-path_scan_start('P:/',sfile,ufile)
-path_scan_start('Q:/',sfile,ufile)
-path_scan_start('R:/',sfile,ufile)
-path_scan_start('S:/',sfile,ufile)
-path_scan_start('T:/',sfile,ufile)
-path_scan_start('U:/',sfile,ufile)
-path_scan_start('V:/',sfile,ufile)
-path_scan_start('W:/',sfile,ufile)
-path_scan_start('X:/',sfile,ufile)
-path_scan_start('Y:/',sfile,ufile)
-path_scan_start('Z:/',sfile,ufile)
-print(('='*60)+'\nScanned files: '+str(len(afile))+'\nDetected files: '+str(len(sfile)+len(ufile))+'\nCertified file: '+str(len(sfile))+'\nUncertified file: '+str(len(ufile)))
-input(('='*60)+'\nPowered by PYAS, press Enter to end the program')
+def traverse_path(path):
+    try:
+        if os.path.isfile(path):
+            pe_scan(path)
+        else:
+            for fd in os.listdir(path):
+                try:
+                    file = str(os.path.join(path,fd))
+                    if os.path.isdir(file):
+                        traverse_path(file)
+                    elif ":\\Windows" not in file:
+                        pe_scan(file)
+                        gc.collect()
+                except:
+                    pass
+    except:
+        pass
+
+path = input("Input Scan Path or File: ")
+print("="*50)
+traverse_path(path)
+input("Press Enter To Quit")

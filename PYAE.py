@@ -26,7 +26,7 @@ def pe_scan(file):
                 elif max(max_sfl) - max(max_vfl) >= 0.1:
                     print(f'Engine: PYAS ML Engine\nDetect: Safe\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
                 else:
-                    print(f'Engine: PYAS ML Engine\nDetect: Warning\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                    print(f'Engine: PYAS ML Engine\nDetect: Unknown\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
             else:
                 print(f'Engine: PYAS ML Engine\nDetect: Unknown\nLevels: 0.0/0.0\nFile: {file}\n{"="*50}')
     except:

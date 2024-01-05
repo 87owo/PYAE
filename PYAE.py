@@ -1,6 +1,6 @@
 import pefile, os, gc
-from PYAS_Function import function_list
-from PYAS_Function_Safe import function_list_safe
+from PYAS_Function_Virus import func_virus
+from PYAS_Function_Safe import func_safe
 
 def pe_scan(file):
     try:
@@ -14,21 +14,21 @@ def pe_scan(file):
                         except:
                             pass
                 max_vfl = []
-                for vfl in function_list:
+                for vfl in func_virus:
                     max_vfl.append(len(set(fn)&set(vfl))/len(set(fn)|set(vfl)))
                 max_sfl = []
-                for sfl in function_list_safe:
+                for sfl in func_safe:
                     max_sfl.append(len(set(fn)&set(sfl))/len(set(fn)|set(sfl)))
-                if max(max_vfl) == 1.0 and max(max_sfl) != 1.0:
-                    print(f'Engine: PYAS ML Engine\nDetect: Virus\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
-                elif max(max_vfl) - max(max_sfl) >= 0.1:
-                    print(f'Engine: PYAS ML Engine\nDetect: Suspicious\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
-                elif max(max_sfl) - max(max_vfl) >= 0.1:
-                    print(f'Engine: PYAS ML Engine\nDetect: Safe\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                if max(max_vfl) - max(max_sfl) >= 0.1: #90, 70
+                    print(f'Engine: PYAS Heur Engine\nDetect: Virus\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                elif max(max_vfl) > max(max_sfl): #90, 85
+                    print(f'Engine: PYAS Heur Engine\nDetect: Suspicious\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                elif max(max_sfl) - max(max_vfl) >= 0.1: #70, 90
+                    print(f'Engine: PYAS Heur Engine\nDetect: Safe\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
                 else:
-                    print(f'Engine: PYAS ML Engine\nDetect: Unknown\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
+                    print(f'Engine: PYAS Heur Engine\nDetect: Unknown\nLevels: {max(max_vfl)}/{max(max_sfl)}\nFile: {file}\n{"="*50}')
             else:
-                print(f'Engine: PYAS ML Engine\nDetect: Unknown\nLevels: 0.0/0.0\nFile: {file}\n{"="*50}')
+                print(f'Engine: PYAS Heur Engine\nDetect: Unknown\nLevels: 0.0/0.0\nFile: {file}\n{"="*50}')
     except:
         pass
 
